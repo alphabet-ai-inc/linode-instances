@@ -20,3 +20,12 @@ variable "image_id" {
     description  = "Image ID"
     type         = string
 }
+
+variable "region" {
+  type     = string
+  default = "us-ord"
+}
+
+variable "infra_backend_state_key" {
+  type   = string
+}
