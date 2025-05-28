@@ -17,15 +17,31 @@ variable "node_count" {
 }
 
 variable "image_id" {
-    description  = "Image ID"
-    type         = string
+  description = "Image ID"
+  type        = string
 }
 
 variable "region" {
-  type     = string
+  type    = string
   default = "us-ord"
 }
 
 variable "infra_backend_state_key" {
-  type   = string
+  type = string
+}
+
+variable "git_repositories" {
+  description = "URL list with Git-repositories"
+  type        = list(string)
+  default     = []
+}
+
+variable "ssh_pub_key_file" {
+  type    = string
+  default = "~/.ssh/id_ed25519.pub"
+}
+
+variable "authorized_users" {
+  type    = list(string)
+  default = []
 }

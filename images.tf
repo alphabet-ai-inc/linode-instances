@@ -5,17 +5,17 @@
 
 data "linode_images" "available_images" {
   filter {
-    name = "deprecated"
+    name   = "deprecated"
     values = [false]
   }
 
   filter {
-    name = "is_public"
+    name   = "is_public"
     values = [true]
   }
 
   filter {
-    name = "status"
+    name   = "status"
     values = ["available"]
   }
 
@@ -25,7 +25,7 @@ data "linode_images" "available_images" {
 output "image_ids" {
   description = "List of IDs for available public images"
   # all
-#   value       = [for image in data.linode_images.available_images.images : image.id]
+  #   value       = [for image in data.linode_images.available_images.images : image.id]
 
   # only with cloud-init support:
   value = [
