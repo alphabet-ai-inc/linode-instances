@@ -26,5 +26,5 @@ terraform {
 }
 
 provider "linode" {
-  token = file("~/.linode_token")
+  token = trimspace(file("~/.linode_token"))
 }

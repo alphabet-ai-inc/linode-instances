@@ -45,3 +45,25 @@ variable "authorized_users" {
   type    = list(string)
   default = []
 }
+
+variable "app" {
+  default = [
+    { 
+      "name": "authserver", 
+      "url": "https://github.com/alphabet-ai-inc/authserver",
+      "directory": "/app/authserver",
+      "commands": [
+        "docker network create authserver-network",
+        "docker compose up -d",
+        ]
+    },
+    { 
+      "name": "authserver_front_end", 
+      "url": "https://github.com/alphabet-ai-inc/authserver_front_end",
+      "directory": "/app/authserver_front_end",
+      "commands": [
+        "docker compose up -d",
+        ]
+    },
+  ]
+}

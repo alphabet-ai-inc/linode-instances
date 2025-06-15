@@ -1,10 +1,11 @@
 #!/bin/bash
-# This StackScript installs git, Docker, Docker Compose, Nginx (in a container), 
-# Portainer (in a container), clones an application repository, and runs docker compose.
+# This StackScript installs git, Docker, Docker Compose, Portainer (in a container),
+# clones both backend and frontend repositories, creates a shared network, and runs docker compose.
 
 # <UDF name="app_repository" label="Application Git Repository URL" example="https://github.com/user/repo.git" />
-# Define the application repository URL as a UDF variable
+# Define the application repository URLs as variables
 APP_REPOSITORY="https://github.com/alphabet-ai-inc/authserver"
+FRONTEND_REPOSITORY="https://github.com/alphabet-ai-inc/authserver_front_end"
 
 # Exit on error
 set -e
@@ -29,41 +30,9 @@ systemctl start docker
 # Add user to docker group
 usermod -aG docker $(whoami)
 
-# Create Nginx configuration for proxying to Portainer and application
-mkdir -p /root/nginx
-cat << 'EOF' > /root/nginx/nginx.conf
-events {}
-http {
-    server {
-        listen 80;
-        server_name _;
-
-        location / {
-            proxy_pass http://localhost:8080; # Adjust port if your app uses a different one
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-
-        location /portainer/ {
-            proxy_pass http://localhost:9000/;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-    }
-}
-EOF
-
-# Run Nginx in a container
-docker run -d \
-    --name nginx \
-    --restart always \
-    -p 80:80 \
-    -v /root/nginx/nginx.conf:/etc/nginx/nginx.conf:ro \
-    nginx:latest
+# Install Docker Compose
+curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
 
 # Run Portainer in a container
 docker run -d \
@@ -74,24 +43,32 @@ docker run -d \
     -v portainer_data:/data \
     portainer/portainer-ce:latest
 
-# Create /app directory
+# Create shared Docker network
+docker network create authserver-network
+
+# Create /app directory and clone repositories
 mkdir -p /app
-
-# Clone the application repository
 cd /app
+
+# Clone and deploy backend
 git clone "$APP_REPOSITORY"
+BACKEND_REPO_NAME=$(basename "$APP_REPOSITORY")
+cd "/app/$BACKEND_REPO_NAME"
+docker-compose up -d
 
-# Navigate to the cloned repository (assuming it clones to a directory named after the repo)
-REPO_NAME=$(basename "$APP_REPOSITORY")
-cd "/app/$REPO_NAME"
-
-# Run docker compose up -d
+# Clone and deploy frontend
+cd /app
+git clone "$FRONTEND_REPOSITORY"
+FRONTEND_REPO_NAME=$(basename "$FRONTEND_REPOSITORY")
+cd "/app/$FRONTEND_REPO_NAME"
 docker-compose up -d
 
 # Open firewall ports (if ufw is enabled)
 if command -v ufw >/dev/null; then
     ufw allow 80/tcp
     ufw allow 9000/tcp
+    ufw allow 3000/tcp
+    ufw allow 8080/tcp
 fi
 
 # Clean up
@@ -99,4 +76,4 @@ apt-get autoclean
 apt-get autoremove --purge -y
 
 # Log completion
-echo "StackScript completed: Git, Docker, Nginx, Portainer, and application deployed."
+echo "StackScript completed: Git, Docker, Portainer, and applications deployed."
