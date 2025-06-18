@@ -47,23 +47,31 @@ variable "authorized_users" {
 }
 
 variable "app" {
-  default = [
-    { 
-      "name": "authserver", 
-      "url": "https://github.com/alphabet-ai-inc/authserver",
-      "directory": "/app/authserver",
-      "commands": [
-        "docker network create authserver-network",
-        "docker compose up -d",
-        ]
-    },
-    { 
-      "name": "authserver_front_end", 
-      "url": "https://github.com/alphabet-ai-inc/authserver_front_end",
-      "directory": "/app/authserver_front_end",
-      "commands": [
-        "docker compose up -d",
-        ]
-    },
-  ]
+  description = "List of applications to deploy"
+  type = list(object({
+    name      = string
+    url       = string
+    directory = string
+    commands  = list(string)
+  }))
+}
+
+variable "env" {
+  description = "Environment (dev, test, prod)"
+  type        = string
+  default     = "dev"
+  validation {
+    condition     = contains(["dev", "test", "prod"], var.env)
+    error_message = "Environment must be 'dev', 'test', or 'prod'."
+  }
+}
+
+variable "bucket_name" {
+  description = "Name of the Object Storage bucket"
+  type        = string
+}
+
+variable "bucket_region" {
+  description = "Not all VPC regions work with Objects Storages"
+  type        = string
 }

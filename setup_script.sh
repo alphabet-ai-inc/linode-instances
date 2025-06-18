@@ -34,6 +34,8 @@ usermod -aG docker $(whoami)
 curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
 
+apt-get install -y jq netcat-openbsd
+
 # Run Portainer in a container
 docker run -d \
     --name portainer \
@@ -43,33 +45,45 @@ docker run -d \
     -v portainer_data:/data \
     portainer/portainer-ce:latest
 
-# Create shared Docker network
-docker network create authserver-network
-
-# Create /app directory and clone repositories
-mkdir -p /app
-cd /app
-
-# Clone and deploy backend
-git clone "$APP_REPOSITORY"
-BACKEND_REPO_NAME=$(basename "$APP_REPOSITORY")
-cd "/app/$BACKEND_REPO_NAME"
-docker-compose up -d
-
-# Clone and deploy frontend
-cd /app
-git clone "$FRONTEND_REPOSITORY"
-FRONTEND_REPO_NAME=$(basename "$FRONTEND_REPOSITORY")
-cd "/app/$FRONTEND_REPO_NAME"
-docker-compose up -d
-
-# Open firewall ports (if ufw is enabled)
-if command -v ufw >/dev/null; then
-    ufw allow 80/tcp
-    ufw allow 9000/tcp
-    ufw allow 3000/tcp
-    ufw allow 8080/tcp
+# Read apps from /tmp/apps.json
+if [ ! -f "/tmp/apps.json" ]; then
+  echo "Error: /tmp/apps.json not found"
+  exit 1
 fi
+mapfile -t apps < <(jq -c '.[]' /tmp/apps.json)
+
+# Process each application
+for app in "${apps[@]}"; do
+  name=$(echo "$app" | jq -r '.name')
+  url=$(echo "$app" | jq -r '.url')
+  directory=$(echo "$app" | jq -r '.directory')
+  
+  echo "Processing app: $name"
+  echo "Cloning $url to $directory"
+  
+  mkdir -p "$directory"
+  git clone "$url" "$directory"
+  
+  # Copy .env from /tmp to application directory
+  env_file="/tmp/${name}.${ENV}.env"
+  if [ -f "$env_file" ]; then
+    echo "Copying $env_file to $directory/.env"
+    cp "$env_file" "$directory/.env"
+    chmod 600 "$directory/.env"
+  else
+    echo "Error: .env file $env_file not found"
+    exit 1
+  fi
+  
+  # Execute commands
+  cd "$directory"
+  echo "Executing commands in $directory"
+  commands=$(echo "$app" | jq -r '.commands[]')
+  while IFS= read -r cmd; do
+    echo "Running: $cmd"
+    bash -c "$cmd" || { echo "Command failed: $cmd"; exit 1; }
+  done <<< "$commands"
+done
 
 # Clean up
 apt-get autoclean

@@ -7,3 +7,30 @@ authorized_users        = ["jpassano", "ssouchkov"]
 git_repositories = [
   "https://github.com/alphabet-ai-inc/authserver"
 ]
+app = [
+  {
+    name      = "authserver"
+    url       = "https://github.com/alphabet-ai-inc/authserver"
+    directory = "/app/authserver"
+    commands = [
+      "git checkout dev-dockerize",
+      "docker network create authserver-network || true",
+      "until docker compose up -d; do sleep 2; done",
+      "timeout 60 bash -c 'while ! nc -z localhost 8080; do sleep 1; done'"
+    ]
+  },
+  {
+    name      = "authserver_front_end"
+    url       = "https://github.com/alphabet-ai-inc/authserver_front_end"
+    directory = "/app/authserver_front_end"
+    commands = [
+      "git checkout dev-dockerize",
+      "docker compose up -d"
+    ]
+  }
+]
+
+bucket_name   = "infra-config"
+bucket_region = "us-ord"
+vault_url     = "https://vault.sushkovs.ru"
+
