@@ -45,3 +45,33 @@ variable "authorized_users" {
   type    = list(string)
   default = []
 }
+
+variable "app" {
+  description = "List of applications to deploy"
+  type = list(object({
+    name      = string
+    url       = string
+    directory = string
+    commands  = list(string)
+  }))
+}
+
+variable "env" {
+  description = "Environment (dev, test, prod)"
+  type        = string
+  default     = "dev"
+  validation {
+    condition     = contains(["dev", "test", "prod"], var.env)
+    error_message = "Environment must be 'dev', 'test', or 'prod'."
+  }
+}
+
+variable "bucket_name" {
+  description = "Name of the Object Storage bucket"
+  type        = string
+}
+
+variable "bucket_region" {
+  description = "Not all VPC regions work with Objects Storages"
+  type        = string
+}

@@ -1,10 +1,11 @@
 #!/bin/bash
-# This StackScript installs git, Docker, Docker Compose, Nginx (in a container), 
-# Portainer (in a container), clones an application repository, and runs docker compose.
+# This StackScript installs git, Docker, Docker Compose, Portainer (in a container),
+# clones both backend and frontend repositories, creates a shared network, and runs docker compose.
 
 # <UDF name="app_repository" label="Application Git Repository URL" example="https://github.com/user/repo.git" />
-# Define the application repository URL as a UDF variable
+# Define the application repository URLs as variables
 APP_REPOSITORY="https://github.com/alphabet-ai-inc/authserver"
+FRONTEND_REPOSITORY="https://github.com/alphabet-ai-inc/authserver_front_end"
 
 # Exit on error
 set -e
@@ -29,41 +30,11 @@ systemctl start docker
 # Add user to docker group
 usermod -aG docker $(whoami)
 
-# Create Nginx configuration for proxying to Portainer and application
-mkdir -p /root/nginx
-cat << 'EOF' > /root/nginx/nginx.conf
-events {}
-http {
-    server {
-        listen 80;
-        server_name _;
+# Install Docker Compose
+curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
 
-        location / {
-            proxy_pass http://localhost:8080; # Adjust port if your app uses a different one
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-
-        location /portainer/ {
-            proxy_pass http://localhost:9000/;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-    }
-}
-EOF
-
-# Run Nginx in a container
-docker run -d \
-    --name nginx \
-    --restart always \
-    -p 80:80 \
-    -v /root/nginx/nginx.conf:/etc/nginx/nginx.conf:ro \
-    nginx:latest
+apt-get install -y jq netcat-openbsd
 
 # Run Portainer in a container
 docker run -d \
@@ -74,29 +45,49 @@ docker run -d \
     -v portainer_data:/data \
     portainer/portainer-ce:latest
 
-# Create /app directory
-mkdir -p /app
-
-# Clone the application repository
-cd /app
-git clone "$APP_REPOSITORY"
-
-# Navigate to the cloned repository (assuming it clones to a directory named after the repo)
-REPO_NAME=$(basename "$APP_REPOSITORY")
-cd "/app/$REPO_NAME"
-
-# Run docker compose up -d
-docker-compose up -d
-
-# Open firewall ports (if ufw is enabled)
-if command -v ufw >/dev/null; then
-    ufw allow 80/tcp
-    ufw allow 9000/tcp
+# Read apps from /tmp/apps.json
+if [ ! -f "/tmp/apps.json" ]; then
+  echo "Error: /tmp/apps.json not found"
+  exit 1
 fi
+mapfile -t apps < <(jq -c '.[]' /tmp/apps.json)
+
+# Process each application
+for app in "${apps[@]}"; do
+  name=$(echo "$app" | jq -r '.name')
+  url=$(echo "$app" | jq -r '.url')
+  directory=$(echo "$app" | jq -r '.directory')
+  
+  echo "Processing app: $name"
+  echo "Cloning $url to $directory"
+  
+  mkdir -p "$directory"
+  git clone "$url" "$directory"
+  
+  # Copy .env from /tmp to application directory
+  env_file="/tmp/${name}.${ENV}.env"
+  if [ -f "$env_file" ]; then
+    echo "Copying $env_file to $directory/.env"
+    cp "$env_file" "$directory/.env"
+    chmod 600 "$directory/.env"
+  else
+    echo "Error: .env file $env_file not found"
+    exit 1
+  fi
+  
+  # Execute commands
+  cd "$directory"
+  echo "Executing commands in $directory"
+  commands=$(echo "$app" | jq -r '.commands[]')
+  while IFS= read -r cmd; do
+    echo "Running: $cmd"
+    bash -c "$cmd" || { echo "Command failed: $cmd"; exit 1; }
+  done <<< "$commands"
+done
 
 # Clean up
 apt-get autoclean
 apt-get autoremove --purge -y
 
 # Log completion
-echo "StackScript completed: Git, Docker, Nginx, Portainer, and application deployed."
+echo "StackScript completed: Git, Docker, Portainer, and applications deployed."
