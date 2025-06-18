@@ -13,7 +13,7 @@ app = [
     url       = "https://github.com/alphabet-ai-inc/authserver"
     directory = "/app/authserver"
     commands = [
-      "git checkout dev-dockerize",
+      "git checkout main",
       "docker network create authserver-network || true",
       "until docker compose up -d; do sleep 2; done",
       "timeout 60 bash -c 'while ! nc -z localhost 8080; do sleep 1; done'"
@@ -24,7 +24,7 @@ app = [
     url       = "https://github.com/alphabet-ai-inc/authserver_front_end"
     directory = "/app/authserver_front_end"
     commands = [
-      "git checkout dev-dockerize",
+      "git checkout main",
       "docker compose up -d"
     ]
   }
