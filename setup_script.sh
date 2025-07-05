@@ -4,8 +4,8 @@
 
 # <UDF name="app_repository" label="Application Git Repository URL" example="https://github.com/user/repo.git" />
 # Define the application repository URLs as variables
-APP_REPOSITORY="https://github.com/alphabet-ai-inc/authserver"
-FRONTEND_REPOSITORY="https://github.com/alphabet-ai-inc/authserver_front_end"
+# APP_REPOSITORY="https://github.com/alphabet-ai-inc/authserver"
+# FRONTEND_REPOSITORY="https://github.com/alphabet-ai-inc/authserver_front_end"
 
 # Exit on error
 set -e

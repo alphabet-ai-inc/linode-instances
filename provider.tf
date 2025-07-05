@@ -1,11 +1,16 @@
 # https://registry.terraform.io/providers/linode/linode/latest/docs
-# https://registry.terraform.io/providers/linode/linode/latest/docs
 terraform {
   required_providers {
     linode = {
       source  = "linode/linode"
       version = "2.40.0"
     }
+    # Set GitHub provider
+    github = {
+      source  = "integrations/github"
+      version = "~> 6.0"
+    }
+
   }
   backend "s3" {
     skip_credentials_validation = true
@@ -27,4 +32,9 @@ terraform {
 
 provider "linode" {
   token = trimspace(file("~/.linode_token"))
+}
+
+provider "github" {
+  token = data.vault_generic_secret.github_token.data["token"]
+  owner = var.github_owner
 }
