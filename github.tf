@@ -57,6 +57,15 @@ resource "github_actions_secret" "server_group" {
   plaintext_value = var.server_group_name
 }
 
+resource "github_actions_secret" "server_ips" {
+  count           = length(local.github_repos)
+  repository      = local.github_repos[count.index].repo
+  secret_name     = "SERVER_IPS"
+  plaintext_value = join(",", [for instance in linode_instance.app_node : instance.ip_address])
+}
+
+
+
 resource "github_actions_secret" "deploy_path" {
   count           = length(local.github_repos)
   repository      = local.github_repos[count.index].repo

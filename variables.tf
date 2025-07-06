@@ -79,7 +79,7 @@ variable "bucket_region" {
 variable "ssh_user" {
   description = "SSH user for deployment"
   type        = string
-  default     = "deploy" # или "root", в зависимости от вашей настройки
+  default     = "deploy"
 }
 
 variable "github_owner" {

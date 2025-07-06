@@ -30,15 +30,6 @@ resource "local_file" "apps_json" {
   filename = "${path.module}/tmp/apps.json"
 }
 
-output "env_authserver" {
-  value = nonsensitive(data.vault_generic_secret.app_env[var.app[0].name].data)
-  # sensitive = true
-}
-output "env_frontend" {
-  value = nonsensitive(data.vault_generic_secret.app_env[var.app[1].name].data)
-  # sensitive = true
-}
-
 # # Policy for every application (limited access)
 # resource "vault_policy" "cicd" {
 #   count = length(var.app)
