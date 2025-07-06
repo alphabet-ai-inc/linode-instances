@@ -4,9 +4,10 @@ image_id                = "linode/ubuntu24.04"
 region                  = "us-ord"
 infra_backend_state_key = "states/infra/dev/tfstate"
 authorized_users        = ["jpassano", "ssouchkov"]
-git_repositories = [
-  "https://github.com/alphabet-ai-inc/authserver"
-]
+server_group_name       = "authserver_dev"
+# git_repositories = [
+#   "https://github.com/alphabet-ai-inc/authserver"
+# ]
 app = [
   {
     name      = "authserver"
@@ -30,7 +31,8 @@ app = [
   }
 ]
 
-bucket_name   = "infra-config"
-bucket_region = "us-ord"
-vault_url     = "https://vault.sushkovs.ru"
-
+bucket_name             = "infra-config"
+bucket_region           = "us-ord"
+vault_url               = "https://vault.sushkovs.ru"
+github_token_vault_path = "secret/github/github_token"
+github_owner            = "alphabet-ai-inc"

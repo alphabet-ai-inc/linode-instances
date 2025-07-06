@@ -75,3 +75,26 @@ variable "bucket_region" {
   description = "Not all VPC regions work with Objects Storages"
   type        = string
 }
+
+variable "ssh_user" {
+  description = "SSH user for deployment"
+  type        = string
+  default     = "deploy"
+}
+
+variable "github_owner" {
+  description = "Github organization"
+  type        = string
+  default     = ""
+}
+variable "github_token_vault_path" {
+  description = "Vault path for GitHub token"
+  type        = string
+  default     = "github/token"
+}
+
+variable "server_group_name" {
+  description = "Name of the server group (e.g., 'authserver_dev', 'payment_prod')"
+  type        = string
+  default     = "authserver_dev"
+}
