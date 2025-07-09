@@ -29,13 +29,6 @@ resource "github_actions_secret" "ssh_private_key" {
   plaintext_value = tls_private_key.github_actions.private_key_pem
 }
 
-resource "github_actions_secret" "servers" {
-  count           = length(local.github_repos)
-  repository      = local.github_repos[count.index].repo
-  secret_name     = "SERVERS"
-  plaintext_value = join(",", [for instance in linode_instance.app_node : instance.ip_address])
-}
-
 resource "github_actions_secret" "ssh_user" {
   count           = length(local.github_repos)
   repository      = local.github_repos[count.index].repo
