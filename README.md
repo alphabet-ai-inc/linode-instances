@@ -27,8 +27,38 @@ Example:
 a4932c4a2d8d755d22be6c26bd80b67bd6cc846e87623cfa413dd63bfb7e87bb
 ```
 
-### 6. `~/.vault_tokens`
-Example:
+### 6. `~/.vault_tokens` for access to remote `Hashicorp Vault`
+The project requires hashicorp vault access.
+Policy example:
+```hcl
+# For terraform project linode-instances for authserver and authserver_front_end
+path "secret/data/authserver/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+path "secret/data/authserver_front_end/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+path "secret/data/github/github_token" {
+  capabilities = ["create", "read", "update", "delete"]
+}
+
+path "secret/data/ssh/authserver_dev/*" {
+  capabilities = ["create", "read", "update", "delete"]
+}
+
+path "sys/policies/acl/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+path "auth/token/create" {
+  capabilities = ["create", "update", "delete", "list"]
+}
+
+```
+
+`~/.vault_tokens` example:
 ```yml
 tokens:
   dev:
@@ -39,6 +69,7 @@ where:
 `dev` should match the `env` variable
 `authserver_dev` should match the `server_group_name` variable
 
+To unseal vault copy `uneal_example.sh` to `unseal.sh`, put your values (tokens and unseal keya) in `unesal.sh` and execute it.
 
 ### Before terraform apply or destroy execute:
 ```bash
@@ -52,3 +83,4 @@ Problem:
 
 Solution:
 [linode/terraform-provider-linode#1834](https://github.com/linode/terraform-provider-linode/issues/1834)
+
