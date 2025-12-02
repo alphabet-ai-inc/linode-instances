@@ -22,7 +22,7 @@ terraform {
     shared_config_files         = ["~/.linode_config"]
     profile                     = "linode"
     bucket                      = "infra-config"
-    key                         = "states/instances/dev/tfstate"
+    key                         = "states/authserver/dev/tfstate"
     region                      = "us-ord"
     endpoints = {
       s3 = "https://us-ord-1.linodeobjects.com"

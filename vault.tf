@@ -4,7 +4,7 @@ locals {
 
 variable "vault_url" {
   type    = string
-  default = "https://vault.sushkovs.ru"
+  default = "http://45.79.25.144:8200/"
 }
 
 provider "vault" {

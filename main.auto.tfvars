@@ -1,5 +1,5 @@
 node_count              = 1
-node_name_prefix        = "worker-node"
+node_name_prefix        = "authserver_dev"
 image_id                = "linode/ubuntu24.04"
 region                  = "us-ord"
 infra_backend_state_key = "states/infra/dev/tfstate"
@@ -10,9 +10,9 @@ server_group_name       = "authserver_dev"
 # ]
 app = [
   {
-    name      = "authserver"
-    url       = "https://github.com/alphabet-ai-inc/authserver"
-    directory = "/app/authserver"
+    name      = "authserver-backend"
+    url       = "https://github.com/alphabet-ai-inc/authserver-backend"
+    directory = "/app/authserver-backend"
     commands = [
       "git checkout main",
       "docker network create authserver-network || true",
@@ -21,9 +21,9 @@ app = [
     ]
   },
   {
-    name      = "authserver_front_end"
-    url       = "https://github.com/alphabet-ai-inc/authserver_front_end"
-    directory = "/app/authserver_front_end"
+    name      = "authserver-frontend"
+    url       = "https://github.com/alphabet-ai-inc/authserver-frontend"
+    directory = "/app/authserver-frontend"
     commands = [
       "git checkout main",
       "docker compose up -d"
@@ -33,6 +33,6 @@ app = [
 
 bucket_name             = "infra-config"
 bucket_region           = "us-ord"
-vault_url               = "https://vault.sushkovs.ru"
+vault_url               = "http://45.79.25.144:8200/"
 github_token_vault_path = "secret/github/github_token"
 github_owner            = "alphabet-ai-inc"
