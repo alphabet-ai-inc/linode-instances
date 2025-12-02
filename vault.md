@@ -1,33 +1,33 @@
 # Prepare vault for work with this project
-### Начало работы
-Для работы с Vault нужно залогиниться из командной строки:
+### Getting Started
+To work with Vault, you need to log in from the command line:
 ```shell
 export VAULT_ADDR=https://<URL>
 vault login <hashicorp_vault_token>
 ```
-Если установка новая (только что установлен HashiCorp Vault), проверить
+If the installation is new (HashiCorp Vault just installed), check
 ```shell
 vault secrets list
 ```
-Если нет строки с путём `secret/`:
+If there is no line with the `secret/` path:
 ```
 secret/       kv           kv_xxxx           n/a
 
 ```
-То необходимо добавить версию 2:
+Then you need to add version 2:
 ```shell
 vault secrets enable -path=secret -version=2 kv
 ```
-После этого по команде vault secrets list должна появиться строка с путём `secret/`
+After this, the command vault secrets list should display a line with the path `secret/`
 
 
-### Подгрузить github token:
+### Add github token:
 ```shell
 vault kv put secret/github/github_token token=<github_token>
 ```
 
 ### Policy
-Пример политики установки authserver (backend + front-end):
+Example of installation policy authserver (backend + front-end):
 name: authserver_back_front
 ```hcl
 # For terraform project linode-instances for authserver and authserver-frontend
@@ -57,16 +57,15 @@ path "auth/token/create" {
 
 ```
 
-### Подготовка .env файла
-- .env файл сконвертировать в json, например, `authserver-backend.dev.env` конвертируем в `authserver-backend.dev.json`, и тоже самое для front-end:
+### Preparing the .env file
+- Convert the .env file to json, for example, convert `authserver-backend.dev.env` to `authserver-backend.dev.json`, and the same for the front-end:
 ```shell
 echo '{'$(sed 's/^/"/; s/=/": "/; s/$/",/' authserver-backend.dev.env | tr -d '\n' | sed 's/,$//')'}' > authserver-backend.dev.json
 
 echo '{'$(sed 's/^/"/; s/=/": "/; s/$/",/' authserver-frontend.dev.env | tr -d '\n' | sed 's/,$//')'}' > authserver-frontend.dev.json
 
 ```
-- Затем загрузить его в Vault
-
+- Then upload it to the Vault
 ```shell
 vault kv put secret/authserver-backend/dev @authserver-backend.dev.json
 vault kv put secret/authserver-frontend/dev @authserver-frontend.dev.json
@@ -77,7 +76,7 @@ vault kv put secret/authserver-frontend/dev @authserver-frontend.dev.json
 ```bash
 vault token create -policy=authserver_back_front -ttl=720h
 ```
-Скопировать токен и разместить в файле `.vault-tokens`
+Copy the token and place it in the `vault-tokens` file
 ```
 tokens:
   dev:
